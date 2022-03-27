@@ -1,6 +1,7 @@
 module HashTree where
 
 import Hashable32
+import Utils
 
 data Tree a = Leaf Hash a | NodeTwo Hash (Tree a) (Tree a) | NodeOne Hash (Tree a)
 
@@ -26,12 +27,9 @@ buildTree l = do
     let buildTreeFromTrees :: Hashable a => [Tree a] -> Tree a
         buildTreeFromTrees [t] = t
         buildTreeFromTrees lt = do
-        let groupInPairs [] = []
-            groupInPairs [x] = [(x, Nothing)]
-            groupInPairs (x:y:tail) = (x, Just y) : groupInPairs tail
-        let treePairs = groupInPairs lt
-        let mergedTreesList = map (uncurry __twigOrNode) treePairs
-        buildTreeFromTrees mergedTreesList
+            let treePairs = groupInPairs lt
+            let mergedTreesList = map (uncurry __twigOrNode) treePairs
+            buildTreeFromTrees mergedTreesList
     let leaves = map leaf l
     buildTreeFromTrees leaves
 
@@ -55,4 +53,31 @@ drawTree (NodeOne h t) =
     showHash h ++ " +\n" ++
     __indent (drawTree t)
 
-main = putStr $ drawTree $ buildTree "fubar"
+type MerklePath = [Either Hash Hash]
+data MerkleProof a = MerkleProof a MerklePath
+
+__prependProof :: MerkleProof a -> Either Hash Hash -> MerkleProof a
+__prependProof (MerkleProof x path) newHead = MerkleProof x (newHead:path)
+
+buildProof :: Hashable a => a -> Tree a -> Maybe (MerkleProof a)
+buildProof x (Leaf _ y) = if hash x == hash y then Just (MerkleProof x []) else Nothing
+buildProof x (NodeOne h t) =
+    case buildProof x t of
+        Just leftProof -> Just (__prependProof leftProof (Left h))
+        Nothing -> Nothing
+buildProof x (NodeTwo h t1 t2) =
+    let leftPath = buildProof x t1 in
+    let rightPath = buildProof x t2 in
+    case (leftPath, rightPath) of
+        (Just _, Just _) -> error "Element exists in both branches of the MerkleTree"
+        (Just leftProof, Nothing) -> Just (__prependProof leftProof (Left h))
+        (Nothing, Just rightProof) -> Just (__prependProof rightProof (Right h))
+        (Nothing, Nothing) -> Nothing
+
+
+
+-- merklePaths :: Hashable a => a -> Tree a -> [MerklePath]
+
+-- main = putStr $ drawTree $ buildTree "fubar"
+-- main = putStr $ drawTree $ buildTree "fubar"
+

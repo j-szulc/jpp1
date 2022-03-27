@@ -18,3 +18,8 @@ fromMaybe def = maybe def id
 maybeHead :: [a] -> Maybe a
 maybeHead (x:_) = Just x
 maybeHead _ = Nothing
+
+groupInPairs :: [a] -> [(a, Maybe a)]
+groupInPairs [] = []
+groupInPairs [x] = [(x, Nothing)]
+groupInPairs (x:y:tail) = (x, Just y) : groupInPairs tail
