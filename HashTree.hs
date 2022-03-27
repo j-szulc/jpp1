@@ -53,6 +53,7 @@ drawTree (NodeOne h t) =
     showHash h ++ " +\n" ++
     __indent (drawTree t)
 
+-- E.g. Left 0x123 means we have to go *left* node, whose *sibling* has hash 0x123
 type MerklePath = [Either Hash Hash]
 data MerkleProof a = MerkleProof a MerklePath
 
@@ -70,14 +71,17 @@ buildProof x (NodeTwo h t1 t2) =
     let rightPath = buildProof x t2 in
     case (leftPath, rightPath) of
         (Just _, Just _) -> error "Element exists in both branches of the MerkleTree"
-        (Just leftProof, Nothing) -> Just (__prependProof leftProof (Left h))
-        (Nothing, Just rightProof) -> Just (__prependProof rightProof (Right h))
+        (Just leftProof, Nothing) -> Just (__prependProof leftProof (Left (treeHash t2)))
+        (Nothing, Just rightProof) -> Just (__prependProof rightProof (Right (treeHash t1)))
         (Nothing, Nothing) -> Nothing
 
-
+showMerklePath :: MerklePath -> String
+showMerklePath [] = ""
+showMerklePath ((Left x):xs) = "<" ++ showHash x ++ showMerklePath xs
+showMerklePath ((Right x):xs) = ">" ++ showHash x ++ showMerklePath xs
 
 -- merklePaths :: Hashable a => a -> Tree a -> [MerklePath]
 
--- main = putStr $ drawTree $ buildTree "fubar"
+main = putStr $ drawTree $ buildTree "fubar"
 -- main = putStr $ drawTree $ buildTree "fubar"
 
