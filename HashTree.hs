@@ -3,7 +3,6 @@ module HashTree where
 import Hashable32
 import Utils
 import Data.Maybe
-import Debug.Trace
 
 
 data Tree a = Leaf Hash a | NodeTwo Hash (Tree a) (Tree a) | NodeOne Hash (Tree a)

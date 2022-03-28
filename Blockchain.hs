@@ -66,7 +66,7 @@ type Nonce = Word32
 mineBlock :: Miner -> Hash -> [Transaction] -> Block
 mineBlock = uncurry3 (fst . curry3 mineTransactions)
 
-genesis = block0b
+genesis = block0
 
 block0 = mineBlock (hash "Satoshi") 0 []
 
