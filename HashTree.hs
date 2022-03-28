@@ -17,9 +17,9 @@ twig t =
 node :: Hashable a => Tree a -> Tree a -> Tree a
 node t1 t2 = NodeTwo (hash (treeHash t1, treeHash t2)) t1 t2
 
-__twigOrNode :: Hashable a => Tree a -> Maybe (Tree a) -> Tree a
-__twigOrNode t Nothing = twig t
-__twigOrNode t1 (Just t2) = node t1 t2
+twigOrNode :: Hashable a => Tree a -> Maybe (Tree a) -> Tree a
+twigOrNode t Nothing = twig t
+twigOrNode t1 (Just t2) = node t1 t2
 
 buildTree :: Hashable a => [a] -> Tree a
 buildTree [] = error "Empty list!"
@@ -29,7 +29,7 @@ buildTree l = do
       buildTreeFromTrees [t] = t
       buildTreeFromTrees lt = do
         let treePairs = groupInPairs lt
-        let mergedTreesList = map (uncurry __twigOrNode) treePairs
+        let mergedTreesList = map (uncurry twigOrNode) treePairs
         buildTreeFromTrees mergedTreesList
   let leaves = map leaf l
   buildTreeFromTrees leaves
@@ -39,34 +39,23 @@ treeHash (Leaf h _) = h
 treeHash (NodeTwo h _ _) = h
 treeHash (NodeOne h _) = h
 
-__prependEachLine :: String -> String -> String
-__prependEachLine with = unlines . map (with ++) . lines
-
-__showsPrepended :: String -> String -> ShowS
-__showsPrepended prependWith a b = (__prependEachLine prependWith a) ++ b
-
-__showsIndented :: String -> ShowS
-__showsIndented = __showsPrepended "  "
-
 drawTree :: Show a => Tree a -> String
 drawTree (Leaf h a) =
-  showsHash h .
-  showChar ' ' .
-  shows a
-  $""
-
+  showsHash h
+    . showChar ' '
+    . shows a
+    $ ""
 drawTree (NodeTwo h t1 t2) =
-  showsHash h .
-  showString " -\n" .
-  __showsIndented (drawTree t1) .
-  __showsIndented (drawTree t2)
-  $""
-
+  showsHash h
+    . showString " -\n"
+    . showsIndented (drawTree t1)
+    . showsIndented (drawTree t2)
+    $ ""
 drawTree (NodeOne h t) =
-  showsHash h .
-  showString " +\n" .
-  __showsIndented (drawTree t)
-  $""
+  showsHash h
+    . showString " +\n"
+    . showsIndented (drawTree t)
+    $ ""
 
 -- E.g. Left 0x123 means we have to go *left* node, whose *sibling* has hash 0x123
 type MerklePath = [Either Hash Hash]
@@ -92,28 +81,27 @@ showMerklePath ((Right x) : xs) = ">" ++ showHash x ++ showMerklePath xs
 
 -- main = putStr $ drawTree $ buildTree "fubar"
 
-__hashPreservingOrder :: (Hashable b1, Hashable b2, Hashable a) => Either b2 a -> b1 -> Hash
-__hashPreservingOrder (Left x) y = hash (y, x)
-__hashPreservingOrder (Right x) y = hash (x, y)
+hashPreservingOrder :: (Hashable b1, Hashable b2, Hashable a) => Either b2 a -> b1 -> Hash
+hashPreservingOrder (Left x) y = hash (y, x)
+hashPreservingOrder (Right x) y = hash (x, y)
 
 -- Calculates root hash by travelling the MerklePath
-__traverseMerklePath :: Hash -> MerklePath -> Hash
-__traverseMerklePath = foldr __hashPreservingOrder
+traverseMerklePath :: Hash -> MerklePath -> Hash
+traverseMerklePath = foldr hashPreservingOrder
 
 verifyProof :: Hashable a => Hash -> MerkleProof a -> Bool
-verifyProof h (MerkleProof x path) = __traverseMerklePath (hash x) path == h
+verifyProof h (MerkleProof x path) = traverseMerklePath (hash x) path == h
 
 instance Show a => Show (Tree a) where
   show = drawTree
 
 instance (Show a) => Show (MerkleProof a) where
   showsPrec p (MerkleProof x path) =
-    showParen (p>10) $
-    showString "MerkleProof " .
-    showsPrec 11 x .
-    showChar ' ' .
-    showString (showMerklePath path)
-
+    showParen (p > 10) $
+      showString "MerkleProof "
+        . showsPrec 11 x
+        . showChar ' '
+        . showString (showMerklePath path)
 
 -- |
 -- >>> putStr $ drawTree $ buildTree "fubar"
