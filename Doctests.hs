@@ -51,12 +51,12 @@ Just False
 
 {- | Transaction Receipts
 >>> charlie = hash "Charlie"
->>> case mineTransactions charlie (hash block1) [tx1] of (block, [receipt]) -> block; (_, receipts) -> error ("Wrong number of receipts: " ++ (show (length receipts)))
+>>> let (block, [receipt]) = mineTransactions charlie (hash block1) [tx1]
+>>> block
 BlockHeader {parent = 797158976, coinbase = Tx {txFrom = 0, txTo = 1392748814, txAmount = 50000}, txroot = 2327748117, nonce = 3}
 Tx {txFrom = 2030195168, txTo = 2969638661, txAmount = 1000}
 <BLANKLINE>
 
->>> (block, [receipt]) = mineTransactions charlie (hash block1) [tx1]
 >>> receipt
 TxReceipt {txrBlock = 230597504, txrProof = MerkleProof (Tx {txFrom = 2030195168, txTo = 2969638661, txAmount = 1000}) >0xbcc3e45a}
 >>> validateReceipt receipt (blockHdr block)
