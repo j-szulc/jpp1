@@ -64,22 +64,9 @@ type Miner = Address
 type Nonce = Word32
 
 mineBlock :: Miner -> Hash -> [Transaction] -> Block
-mineBlock miner parent txs =
-  let coinbase = coinbaseTx miner
-      txsWithCoinbase = coinbase : txs
-      genHeader nonce =
-        BlockHeader
-          { parent = parent,
-            coinbase = coinbase,
-            txroot = treeHash (buildTree txsWithCoinbase),
-            nonce = nonce
-          }
-      validHeaders = [genHeader nonce | nonce <- [0 ..], validNonce (genHeader nonce)]
-   in case maybeHead validHeaders of
-        Just header -> Block {blockHdr = header, blockTxs = txs}
-        Nothing -> error "Nonce not found"
+mineBlock = uncurry3 (fst . curry3 mineTransactions)
 
-genesis = block0
+genesis = block0b
 
 block0 = mineBlock (hash "Satoshi") 0 []
 
