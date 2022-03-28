@@ -77,7 +77,6 @@ showMerklePath [] = ""
 showMerklePath ((Left x):xs) = "<" ++ showHash x ++ showMerklePath xs
 showMerklePath ((Right x):xs) = ">" ++ showHash x ++ showMerklePath xs
 
-
 -- main = putStr $ drawTree $ buildTree "fubar"
 
 __hashPreservingOrder :: (Hashable b1, Hashable b2, Hashable a) => Either b2 a -> b1 -> Hash

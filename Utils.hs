@@ -19,10 +19,11 @@ maybeHead :: [a] -> Maybe a
 maybeHead (x:_) = Just x
 maybeHead _ = Nothing
 
+justOrError :: Maybe a -> String ->  a
+justOrError (Just x) _ = x
+justOrError Nothing errorStr = error errorStr
+
 groupInPairs :: [a] -> [(a, Maybe a)]
 groupInPairs [] = []
 groupInPairs [x] = [(x, Nothing)]
 groupInPairs (x:y:tail) = (x, Just y) : groupInPairs tail
-
-leftOrRight (Left x) = x
-leftOrRight (Right x) = x
