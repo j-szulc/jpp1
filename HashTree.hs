@@ -2,6 +2,9 @@ module HashTree where
 
 import Hashable32
 import Utils
+import Data.Maybe
+import Debug.Trace
+
 
 data Tree a = Leaf Hash a | NodeTwo Hash (Tree a) (Tree a) | NodeOne Hash (Tree a)
 
@@ -57,31 +60,47 @@ drawTree (NodeOne h t) =
 type MerklePath = [Either Hash Hash]
 data MerkleProof a = MerkleProof a MerklePath
 
-__prependProof :: MerkleProof a -> Either Hash Hash -> MerkleProof a
-__prependProof (MerkleProof x path) newHead = MerkleProof x (newHead:path)
+merklePaths :: Hashable a => a -> Tree a -> [MerklePath]
+merklePaths x (Leaf _ y) = [[] | hash x == hash y]
+merklePaths x (NodeOne h t) = [Left h:path | path <- merklePaths x t]
+merklePaths x (NodeTwo h t1 t2) =
+     [Left  (treeHash t2):path | path <- merklePaths x t1] ++
+     [Right (treeHash t1):path | path <- merklePaths x t2]
 
 buildProof :: Hashable a => a -> Tree a -> Maybe (MerkleProof a)
-buildProof x (Leaf _ y) = if hash x == hash y then Just (MerkleProof x []) else Nothing
-buildProof x (NodeOne h t) =
-    case buildProof x t of
-        Just leftProof -> Just (__prependProof leftProof (Left h))
-        Nothing -> Nothing
-buildProof x (NodeTwo h t1 t2) =
-    let leftPath = buildProof x t1 in
-    let rightPath = buildProof x t2 in
-    case (leftPath, rightPath) of
-        (Just _, Just _) -> error "Element exists in both branches of the MerkleTree"
-        (Just leftProof, Nothing) -> Just (__prependProof leftProof (Left (treeHash t2)))
-        (Nothing, Just rightProof) -> Just (__prependProof rightProof (Right (treeHash t1)))
-        (Nothing, Nothing) -> Nothing
+buildProof x t = do
+    path <- maybeHead (merklePaths x t)
+    Just (MerkleProof x path)
 
 showMerklePath :: MerklePath -> String
 showMerklePath [] = ""
 showMerklePath ((Left x):xs) = "<" ++ showHash x ++ showMerklePath xs
 showMerklePath ((Right x):xs) = ">" ++ showHash x ++ showMerklePath xs
 
--- merklePaths :: Hashable a => a -> Tree a -> [MerklePath]
 
-main = putStr $ drawTree $ buildTree "fubar"
 -- main = putStr $ drawTree $ buildTree "fubar"
 
+__hashPreservingOrder :: Either Hash Hash -> Hash -> Hash
+__hashPreservingOrder (Left x) y = trace (show (showHash x, showHash y, showHash (hash (y,x)))) (hash (y,x))
+__hashPreservingOrder (Right x) y = trace (show (showHash y, showHash x, showHash (hash (x,y)))) (hash (x,y))
+
+-- Calculates root hash by travelling the MerklePath
+__traverseMerklePath :: Hash -> MerklePath -> Hash
+__traverseMerklePath = foldr __hashPreservingOrder
+
+verifyProof :: Hashable a => Hash -> MerkleProof a -> Bool
+verifyProof h (MerkleProof x path) = __traverseMerklePath (hash x) path == h
+
+debugVerifyProof :: Hashable a => Hash -> MerkleProof a -> Hash
+debugVerifyProof h (MerkleProof x path) = __traverseMerklePath (hash x) path
+
+instance Show a => Show (Tree a) where
+    show = drawTree
+
+instance Show (MerkleProof a) where
+    show (MerkleProof x path) = showMerklePath path
+
+
+t = buildTree "bitcoin"
+proof = fromJust (buildProof 'i' t)
+test = showHash (debugVerifyProof (hash 'i') (proof))
