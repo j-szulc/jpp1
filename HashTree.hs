@@ -95,7 +95,13 @@ instance Show a => Show (Tree a) where
   show = drawTree
 
 instance (Show a) => Show (MerkleProof a) where
-  show (MerkleProof x path) = "(MerkleProof " ++ (show x) ++ " " ++ (showMerklePath path) ++ ")"
+  showsPrec p (MerkleProof x path) =
+    showParen (p>10) $
+    showString "MerkleProof " .
+    showsPrec 11 x .
+    showChar ' ' .
+    showString (showMerklePath path)
+
 
 -- |
 -- >>> putStr $ drawTree $ buildTree "fubar"
