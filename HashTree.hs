@@ -97,7 +97,9 @@ instance Show a => Show (Tree a) where
 instance Show (MerkleProof a) where
     show (MerkleProof x path) = showMerklePath path
 
--- t = buildTree "bitcoin"
--- proof = buildProof 'i' t
--- test1 = verifyProof (treeHash t) <$> proof
--- test2 = verifyProof 0xbada55bb <$> proof
+{-
+t = buildTree "bitcoin"
+proof = buildProof 'i' t
+test1 = verifyProof (treeHash t) <$> proof
+test2 = verifyProof 0xbada55bb <$> proof
+-}
