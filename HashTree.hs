@@ -80,9 +80,9 @@ showMerklePath ((Right x):xs) = ">" ++ showHash x ++ showMerklePath xs
 
 -- main = putStr $ drawTree $ buildTree "fubar"
 
-__hashPreservingOrder :: Either Hash Hash -> Hash -> Hash
-__hashPreservingOrder (Left x) y = trace (show (showHash x, showHash y, showHash (hash (y,x)))) (hash (y,x))
-__hashPreservingOrder (Right x) y = trace (show (showHash y, showHash x, showHash (hash (x,y)))) (hash (x,y))
+__hashPreservingOrder :: (Hashable b1, Hashable b2, Hashable a) => Either b2 a -> b1 -> Hash
+__hashPreservingOrder (Left x) y = hash (y,x)
+__hashPreservingOrder (Right x) y = hash (x,y)
 
 -- Calculates root hash by travelling the MerklePath
 __traverseMerklePath :: Hash -> MerklePath -> Hash
@@ -91,16 +91,13 @@ __traverseMerklePath = foldr __hashPreservingOrder
 verifyProof :: Hashable a => Hash -> MerkleProof a -> Bool
 verifyProof h (MerkleProof x path) = __traverseMerklePath (hash x) path == h
 
-debugVerifyProof :: Hashable a => Hash -> MerkleProof a -> Hash
-debugVerifyProof h (MerkleProof x path) = __traverseMerklePath (hash x) path
-
 instance Show a => Show (Tree a) where
     show = drawTree
 
 instance Show (MerkleProof a) where
     show (MerkleProof x path) = showMerklePath path
 
-
-t = buildTree "bitcoin"
-proof = fromJust (buildProof 'i' t)
-test = showHash (debugVerifyProof (hash 'i') (proof))
+-- t = buildTree "bitcoin"
+-- proof = buildProof 'i' t
+-- test1 = verifyProof (treeHash t) <$> proof
+-- test2 = verifyProof 0xbada55bb <$> proof
