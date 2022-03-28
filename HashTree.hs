@@ -42,19 +42,31 @@ treeHash (NodeOne h _) = h
 __prependEachLine :: String -> String -> String
 __prependEachLine with = unlines . map (with ++) . lines
 
-__indent = __prependEachLine "  "
+__showsPrepended :: String -> String -> ShowS
+__showsPrepended prependWith a b = (__prependEachLine prependWith a) ++ b
+
+__showsIndented :: String -> ShowS
+__showsIndented = __showsPrepended "  "
 
 drawTree :: Show a => Tree a -> String
-drawTree (Leaf h a) = showHash h ++ " " ++ show a
+drawTree (Leaf h a) =
+  showsHash h .
+  showChar ' ' .
+  shows a
+  $""
+
 drawTree (NodeTwo h t1 t2) =
-  let indent = unlines . map (" " ++) . lines :: String -> String
-   in showHash h ++ " -\n"
-        ++ __indent (drawTree t1)
-        ++ __indent (drawTree t2)
+  showsHash h .
+  showString " -\n" .
+  __showsIndented (drawTree t1) .
+  __showsIndented (drawTree t2)
+  $""
+
 drawTree (NodeOne h t) =
-  let
-   in showHash h ++ " +\n"
-        ++ __indent (drawTree t)
+  showsHash h .
+  showString " +\n" .
+  __showsIndented (drawTree t)
+  $""
 
 -- E.g. Left 0x123 means we have to go *left* node, whose *sibling* has hash 0x123
 type MerklePath = [Either Hash Hash]
