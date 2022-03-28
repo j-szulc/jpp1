@@ -7,6 +7,16 @@ import Hashable32
 import PPrint
 import Utils
 
+justOrError :: Maybe a -> String -> a
+justOrError (Just x) _ = x
+justOrError Nothing errorStr = error errorStr
+
+curry3 :: (t1 -> t2 -> t3 -> t4) -> (t1, t2, t3) -> t4
+curry3 f (a, b, c) = f a b c
+
+uncurry3 :: ((a, b, c) -> t) -> a -> b -> c -> t
+uncurry3 f a b c = f (a, b, c)
+
 type Address = Hash
 
 type Amount = Word32

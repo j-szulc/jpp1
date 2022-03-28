@@ -4,6 +4,20 @@ import Data.Maybe
 import Hashable32
 import Utils
 
+groupInPairs :: [a] -> [(a, Maybe a)]
+groupInPairs [] = []
+groupInPairs [x] = [(x, Nothing)]
+groupInPairs (x : y : tail) = (x, Just y) : groupInPairs tail
+
+prependEachLine :: String -> String -> String
+prependEachLine with = unlines . map (with ++) . lines
+
+showsPrepended :: String -> String -> ShowS
+showsPrepended prependWith a b = prependEachLine prependWith a ++ b
+
+showsIndented :: String -> ShowS
+showsIndented = showsPrepended "  "
+
 data Tree a = Leaf Hash a | NodeTwo Hash (Tree a) (Tree a) | NodeOne Hash (Tree a)
 
 leaf :: Hashable a => a -> Tree a
